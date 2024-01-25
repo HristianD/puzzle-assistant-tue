@@ -5,10 +5,8 @@ import java.awt.event.MouseEvent;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-
-import ypa.model.KCell;
-import ypa.model.KEntry;
-import ypa.model.KPuzzle;
+import ypa.model.KSCell;
+import ypa.model.KSPuzzle;
 
 /**
  * A graphical view on a Kakuro puzzle state.
@@ -51,23 +49,23 @@ public class PuzzlePanel extends javax.swing.JPanel {
     // End of variables declaration//GEN-END:variables
 
     /** Cell size in pixels */
-    private final int cellSize = 30;
+    private final int cellSize = 80;
     // TODO: Consider making the cell size changeable by user
 
    final int offsetX = cellSize; // margin for horizontal coordinates
    final int offsetY = cellSize; // margin for vertical coordinates
 
    /** The puzzle being manipulated */
-    private KPuzzle puzzle;
+    private KSPuzzle puzzle;
 
     /** Selected cell, affected by keystrokes. */
-    private KCell selected;
+    private KSCell selected;
 
     /** Whether symbols are highlighted */
     private boolean highlight;
 
     /** Marked cells (by different background color) */
-    private Set<KCell> markedCells;
+    private Set<KSCell> markedCells;
 
     /**
      * Initializes this panel.
@@ -82,7 +80,7 @@ public class PuzzlePanel extends javax.swing.JPanel {
      *
      * @param puzzle  the puzzle
      */
-    public void setPuzzle(final KPuzzle puzzle) {
+    public void setPuzzle(final KSPuzzle puzzle) {
         this.puzzle = puzzle;
         this.selected = null;
         this.markedCells = null;
@@ -93,7 +91,7 @@ public class PuzzlePanel extends javax.swing.JPanel {
      *
      * @return the selected cell
      */
-    public KCell getSelected() {
+    public KSCell getSelected() {
         return selected;
     }
 
@@ -102,7 +100,7 @@ public class PuzzlePanel extends javax.swing.JPanel {
      *
      * @param cell  the selected cell
      */
-    public void setSelected(final KCell cell) {
+    public void setSelected(final KSCell cell) {
         this.selected = cell;
     }
 
@@ -120,7 +118,7 @@ public class PuzzlePanel extends javax.swing.JPanel {
      *
      * @param markedCells  the cells to mark, or {@code null} if none
      */
-    public void setMarkedCells(final Collection<KCell> markedCells) {
+    public void setMarkedCells(final Collection<KSCell> markedCells) {
         if (markedCells == null) {
             this.markedCells = new HashSet<>();
         } else {
@@ -139,7 +137,7 @@ public class PuzzlePanel extends javax.swing.JPanel {
      * @param delta_x  x-offset for digit within cell
      * @param delta_y  y-offset for digit within cell
      */
-    private void paintCell(final Graphics g, final KCell cell,
+    private void paintCell(final Graphics g, final KSCell cell,
             final int x, final int y, final int delta_x, final int delta_y) {
         // set background if cell is marked
         if (highlight && this.markedCells != null
@@ -153,30 +151,33 @@ public class PuzzlePanel extends javax.swing.JPanel {
             g.fillRect(x + 1, y - cellSize + 1,
                     cellSize - 1, cellSize - 1);
         }
-
-        // draw cell content, if not empty
-        if (cell.isBlocked()) {
-            g.setColor(Color.BLACK);
-            g.fillRect(x + 1, y - cellSize + 1,
-                    cellSize - 1, cellSize - 1);
-            // draw diagonal
-            g.setColor(Color.WHITE);
-            g.drawLine(x, y - cellSize, x + cellSize, y);
-        } else if (! cell.isEmpty()) {
+        if (!cell.isEmpty(cell)) {
             // cell occupied by a symbol
             // set color for symbol
             Color color = Color.BLACK;
             if (highlight) {
-                if (! cell.isOK()) {
+                if (!puzzle.isValid(cell)) {
                     color = Color.RED;
-                } else if (puzzle.isSolved()) {
+                } else if (puzzle.isSolved(cell)) {
                     color = Color.GREEN;
                 }
             }
-            g.setColor(color);
-
-            g.drawString(cell.toString(), x + delta_x, y - delta_y);
         }
+        
+        Color colorCell = cell.getColor();
+        g.setColor(colorCell);
+        g.fillRect(x + 1, y - cellSize + 1,
+                    cellSize - 1, cellSize - 1);
+        
+        int groupNumber = cell.getCageSum();
+        if (groupNumber > 0) {
+            g.setColor(Color.BLACK);
+            g.setFont(new Font("default", Font.BOLD, 12)); // change the font size to make the group number smaller
+            g.drawString(String.valueOf(groupNumber), x + 5, y - cellSize + 15);
+        }
+        
+        g.setColor(Color.BLACK);
+        g.drawString(cell.toString(), x + delta_x, y - delta_y);
     }
 
     @Override
@@ -217,42 +218,13 @@ public class PuzzlePanel extends javax.swing.JPanel {
             for (int c = 0; c != puzzle.getColumnCount(); ++ c) {
                 final int x = c * cellSize + offsetX;
                 // x, y = coordinate of bottom-left corner
-                final KCell cell = puzzle.getCell(r, c);
+                final KSCell cell = puzzle.getCell(r, c);
                 paintCell(g, cell, x, y, delta_x, delta_y);
             }
         }
         // draw entries sums
         g.setColor(Color.WHITE);
         g.setFont(new Font("Lucida Sans Typewriter", Font.PLAIN, 12));
-        for (KEntry entry : puzzle.getEntries()) {
-            final int row; // row index of cell to show sum of entry
-            final int column; // column index of cell to show sum of entry
-            final int x; // x-coordinate of bottom-left corner
-            final int y; // y-coordinate of bottom-left corner
-            final int dx; // x-offset for showing sum
-            final int dy; // y-offset for showing sum
-            switch (entry.getDirection()) {
-                case HORIZONTAL -> {
-                    row = entry.getLocation().getRow();
-                    column = entry.getLocation().getColumn() - 1;
-                    dx = cellSize / 2 + 1;
-                    dy = cellSize / 2 + 1;
-                }
-                case VERTICAL -> {
-                    row = entry.getLocation().getRow() - 1;
-                    column = entry.getLocation().getColumn();
-                    dx = cellSize / 8 + 1;
-                    dy = cellSize / 8 - 1;
-                }
-                default -> throw new IllegalStateException(getClass().getSimpleName()
-                        + ".paintComponent(): bad direction");
-            }
-            x = column * cellSize + offsetX;
-            y = (row + 1) * cellSize + offsetY;
-            // draw sum, in smaller font
-            final int sum = entry.getSpecification().getSum();
-            g.drawString(String.format("%2d", sum), x + dx, y - dy);
-        }
     }
 
     /**
@@ -262,7 +234,7 @@ public class PuzzlePanel extends javax.swing.JPanel {
      * @return  cell in grid at {@code evt}, or {@code null} if non-existent
      * @pre {@code evt != null}
      */
-    public KCell mouseToCell(final MouseEvent evt) {
+    public KSCell mouseToCell(final MouseEvent evt) {
         if (puzzle == null) {
             return null;
         }

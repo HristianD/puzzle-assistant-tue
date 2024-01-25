@@ -1,5 +1,7 @@
 package ypa.reasoning;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import org.junit.jupiter.api.Test;
 
 import ypa.command.CompoundCommand;
@@ -9,6 +11,8 @@ import ypa.reasoning.Reasoner;
 import java.util.Scanner;
 
 import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import ypa.model.KSPuzzle;
 
 /**
  * Test cases for {@link Reasoner}.
@@ -17,13 +21,32 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class ReasonerTest {
 
-    public static final String PUZZLE = "a 1 - 3 2\nb 1 - 7 2\na 1 | 4 2\na 2 | 6 2\n";
-
-    /** Puzzle for testing. */
-    private final KPuzzle puzzle;
-
-    public ReasonerTest() {
-        puzzle = new KPuzzle(new Scanner(PUZZLE), "Test");
+    private KSPuzzle puzzle;
+    
+    /**
+     * Load in the example killer sudoku for testing.
+     */
+    @BeforeEach
+    void setUp() {
+        try {
+            // Assuming that the puzzle1.zgr file is in the "puzzles" folder
+            Scanner scanner = new Scanner(new File("puzzles/puzzle1.zgr"));
+            puzzle = new KSPuzzle(scanner, "TestPuzzle");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Test the constructor with puzzle == null.
+     */
+    @Test
+    public void testConstructorWithNullPuzzle() {
+        System.out.println("Reasoner constructor, puzzle == null");
+        Throwable e = assertThrows(IllegalArgumentException.class, () -> {
+            new Reasoner(null);
+        });
+        assertNotNull(e.getMessage(), "Message should not be null");
     }
 
     /**

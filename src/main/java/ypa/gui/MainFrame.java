@@ -7,12 +7,10 @@ import ypa.command.Command;
 import ypa.command.CompoundCommand;
 import ypa.command.SetCommand;
 import ypa.command.UndoRedo;
-import ypa.model.KCell;
-import ypa.model.KPuzzle;
-import ypa.reasoning.BasicEmptyCellByContradiction;
-import ypa.reasoning.EntryWithOneEmptyCell;
-import ypa.reasoning.FixpointReasoner;
+import ypa.model.KSCell;
+import ypa.model.KSPuzzle;
 import ypa.reasoning.Reasoner;
+import ypa.reasoning.Rule45Reasoner;
 import ypa.solvers.AbstractSolver;
 import ypa.solvers.BacktrackSolver;
 
@@ -425,7 +423,7 @@ public class MainFrame extends javax.swing.JFrame {
             return;
         }
         try {
-            puzzle = new KPuzzle(scanner, puzzleFile.getName());
+            puzzle = new KSPuzzle(scanner, puzzleFile.getName());
             this.setTitle("Kakuro Puzzle Assistant: " + puzzle.getName());
             jTextArea.append("Loaded puzzle from file " +
                     puzzle.getName() + "\n");
@@ -437,7 +435,7 @@ public class MainFrame extends javax.swing.JFrame {
 //
             }
             unsavedModifications = false;
-            updateModeRadioButtons(KPuzzle.Mode.SOLVE);
+            updateModeRadioButtons(KSPuzzle.Mode.SOLVE);
             updateFrame();
         } catch (IllegalArgumentException e) {
             jTextArea.append("File does not contain a puzzle description:\n");
@@ -474,31 +472,32 @@ public class MainFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItemNewActionPerformed
 
     private void jRadioButtonMenuItemViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRadioButtonMenuItemViewActionPerformed
-        updateModeRadioButtons(KPuzzle.Mode.VIEW);
+        updateModeRadioButtons(KSPuzzle.Mode.VIEW);
     }//GEN-LAST:event_jRadioButtonMenuItemViewActionPerformed
 
     private void jRadioButtonMenuItemSolveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRadioButtonMenuItemSolveActionPerformed
-        updateModeRadioButtons(KPuzzle.Mode.SOLVE);
+        updateModeRadioButtons(KSPuzzle.Mode.SOLVE);
     }//GEN-LAST:event_jRadioButtonMenuItemSolveActionPerformed
 
     private void jRadioButtonMenuItemEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jRadioButtonMenuItemEditActionPerformed
-        updateModeRadioButtons(KPuzzle.Mode.EDIT);
+        updateModeRadioButtons(KSPuzzle.Mode.EDIT);
     }//GEN-LAST:event_jRadioButtonMenuItemEditActionPerformed
 
     private void jPanelPuzzleMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jPanelPuzzleMouseClicked
         if (evt.getClickCount() == 0) {
             return;
         }
-        final KCell cell = puzzlePanel.mouseToCell(evt);
+        final KSCell cell = puzzlePanel.mouseToCell(evt);
         if (cell == null) {
             return;
         }
         // cell != null
 
-        if (cell != null & ! cell.isBlocked()) {
+        if (!puzzle.isValid(cell)) {
             // clicked an unblocked cell
             this.puzzlePanel.setSelected(cell);
-            jTextArea.append("Selected cell " + cell.getLocation().toString()
+
+            jTextArea.append(cell.getLocationString()
                     + "\n");
         } else {
             this.puzzlePanel.setSelected(null);
@@ -512,12 +511,12 @@ public class MainFrame extends javax.swing.JFrame {
         if (puzzle == null) {
             return;
         }
-        final KCell cell = this.puzzlePanel.getSelected();
+        final KSCell cell = this.puzzlePanel.getSelected();
         if (cell == null) {
             return;
         }
         // cell != null
-        if (puzzle.getMode() != KPuzzle.Mode.SOLVE) {
+        if (puzzle.getMode() != KSPuzzle.Mode.SOLVE) {
             return;
         }
 
@@ -527,7 +526,7 @@ public class MainFrame extends javax.swing.JFrame {
         if ('1' <= c && c <= '9') {
             state = c - '0';
         } else if (c == '0' | c == ' ') {
-            state = KCell.EMPTY;
+            state = KSCell.EMPTY;
         } else {
             return;
         }
@@ -539,7 +538,7 @@ public class MainFrame extends javax.swing.JFrame {
 //
         }
         unsavedModifications = true;
-        if (puzzle.isSolved()) {
+        if (puzzle.isSolved(cell)) {
             jTextArea.append("\n> > > Puzzle is SOLVED. < < <\n");
         }
         updateFrame();
@@ -550,7 +549,7 @@ public class MainFrame extends javax.swing.JFrame {
             jTextArea.append("No puzzle to dump.\n");
             return;
         }
-        jTextArea.append(puzzle.gridAsString());
+        jTextArea.append(puzzle.toString());
     }//GEN-LAST:event_jMenuItemDumpActionPerformed
 
     private void jMenuItemCopyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCopyActionPerformed
@@ -681,15 +680,16 @@ public class MainFrame extends javax.swing.JFrame {
         Reasoner reasoner = null;
 // Optionally, configure a reasoning strategy
         //reasoner = new EntryWithOneEmptyCell(puzzle);
-        reasoner = new BasicEmptyCellByContradiction(puzzle);
+        //reasoner = new BasicEmptyCellByContradiction(puzzle);
         //reasoner = new GeneralizedEmptyCellByContradiction(puzzle, reasoner);
         //reasoner = new GeneralizedEmptyCellByContradiction(puzzle);
+        reasoner = new Rule45Reasoner(puzzle);
 //
         if (reasoner == null) {
             message = "Apply Reasoning is not yet implemented.";
         } else {
             if (! jCheckBoxMenuItemStopAtFirstChange.isSelected()) {
-                reasoner = new FixpointReasoner(puzzle, reasoner);
+                //reasoner = new FixpointReasoner(puzzle, reasoner);
             }
             CompoundCommand command = reasoner.apply();
             if (command == null) {
@@ -715,9 +715,9 @@ public class MainFrame extends javax.swing.JFrame {
         Reasoner reasoner = null;
         AbstractSolver solver = null;
 // Configure and invoke solver
-        reasoner = new EntryWithOneEmptyCell(puzzle);
+        //reasoner = new EntryWithOneEmptyCell(puzzle);
         //reasoner = new BasicEmptyCellByContradiction(puzzle);
-        reasoner = new FixpointReasoner(puzzle, reasoner);
+        //reasoner = new FixpointReasoner(puzzle, reasoner);
         solver = new BacktrackSolver(puzzle, reasoner);
 //
         if (solver == null) {
@@ -828,7 +828,7 @@ public class MainFrame extends javax.swing.JFrame {
             new File(new File(".."), "puzzles");
 
     /** The puzzle being solved, or null if no puzzle loaded. */
-    private KPuzzle puzzle = null;
+    private KSPuzzle puzzle = null;
 
     /** The puzzle panel. */
     private final PuzzlePanel puzzlePanel;
@@ -876,7 +876,7 @@ public class MainFrame extends javax.swing.JFrame {
             jPanelPuzzle.setHighlight(
                     jCheckBoxMenuItemHighlight.getState());
 
-            final Collection<KCell> markedCells = new HashSet<>();
+            final Collection<KSCell> markedCells = new HashSet<>();
 // If available, set markedCells to cells involved in last command
             if (undoRedo.canUndo()) {
                 final Command command = undoRedo.lastDone();
@@ -912,7 +912,7 @@ public class MainFrame extends javax.swing.JFrame {
      *
      * @param mode  the new mode
      */
-    private void updateModeRadioButtons(final KPuzzle.Mode mode) {
+    private void updateModeRadioButtons(final KSPuzzle.Mode mode) {
         if (puzzle == null) {
             jRadioButtonMenuItemView.setSelected(false);
             jRadioButtonMenuItemSolve.setSelected(false);
@@ -920,9 +920,9 @@ public class MainFrame extends javax.swing.JFrame {
             return;
         }
         // puzzle != null
-        jRadioButtonMenuItemView.setSelected(mode == KPuzzle.Mode.VIEW);
-        jRadioButtonMenuItemSolve.setSelected(mode == KPuzzle.Mode.SOLVE);
-        jRadioButtonMenuItemEdit.setSelected(mode == KPuzzle.Mode.EDIT);
+        jRadioButtonMenuItemView.setSelected(mode == KSPuzzle.Mode.VIEW);
+        jRadioButtonMenuItemSolve.setSelected(mode == KSPuzzle.Mode.SOLVE);
+        jRadioButtonMenuItemEdit.setSelected(mode == KSPuzzle.Mode.EDIT);
         puzzle.setMode(mode);
         jTextArea.append("Mode changed to " + puzzle.getMode() + "\n");
     }

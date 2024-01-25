@@ -1,17 +1,17 @@
 /**
- * Package containing the Kakuro Puzzle Assistant.
- * See <a href="http://en.wikipedia.org/wiki/Kakuro">Wikipedia</a>
- * for an explanation of Kakuro puzzles.
+ * Package containing the Killer sudoku Puzzle Assistant.
+ * See <a href="https://en.wikipedia.org/wiki/Killer_sudoku">Wikipedia</a>
+ * for an explanation of Killer sudoku puzzles.
  *
  * <p>
- * This Kakuro Puzzle Assistant has the following goals:
+ * This Killer sudoku Puzzle Assistant has the following goals:
  * <ul>
- * <li>Show a graphical view of a Kakuro puzzle loaded from a text file.
- * <li>Let you solve a Kakuro puzzle interactively in the graphical view.
+ * <li>Show a graphical view of a Killer sudoku puzzle loaded from a text file.
+ * <li>Let you solve a Killer sudoku puzzle interactively in the graphical view.
  * <li>Automatically apply reasoning strategies,
- *   to help solve a Kakuro puzzle.
- * <li>Automatically solve a Kakuro puzzle.
- * <li>Let you construct and edit Kakuro puzzles.
+ *   to help solve a Killer sudoku puzzle.
+ * <li>Automatically solve a Killer sudoku puzzle.
+ * <li>Let you construct and edit Killer sudoku puzzles.
  * </ul>
  *
  * <p>

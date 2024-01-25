@@ -101,5 +101,5 @@
             </plugin>
         </plugins>
     </build>
-
+    <name>KillerSudokuPuzzleAssistant</name>
 </project>

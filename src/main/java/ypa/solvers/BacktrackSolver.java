@@ -2,12 +2,12 @@ package ypa.solvers;
 
 import ypa.command.Command;
 import ypa.command.SetCommand;
-import ypa.model.KCell;
-import ypa.model.KPuzzle;
+import ypa.model.KSCell;
+import ypa.model.KSPuzzle;
 import ypa.reasoning.Reasoner;
 
 /**
- * A simple recursive backtracking solver for Kakuro Puzzles.
+ * A simple recursive backtracking solver for Killer Sudoku.
  * It uses puzzle.getMinNumber() and puzzle.getMaxNumber()
  * to obtain the range of `digits' to try in an empty cell.
  * <p>
@@ -35,7 +35,7 @@ public class BacktrackSolver extends AbstractSolver {
      * @throws IllegalArgumentException  if {@code puzzle == null}
      * @pre {@code puzzle != null}
      */
-    public BacktrackSolver(KPuzzle puzzle, final Reasoner reasoner) {
+    public BacktrackSolver(KSPuzzle puzzle, final Reasoner reasoner) {
         super(puzzle);
         this.reasoner = reasoner;
     }
@@ -47,12 +47,17 @@ public class BacktrackSolver extends AbstractSolver {
      *
      * @return first empty cell, or null if no empty cells
      */
-    protected KCell getEmptyCell() {
-        for (final KCell cell : puzzle.getCells()) {
-            if (cell.isEmpty()) {
-                return cell;
+    protected KSCell getEmptyCell() {
+        final KSCell[][] matrix = puzzle.getMatrix();
+
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = 0; j < matrix[i].length; j++) {
+                if (matrix[i][j].getValue() == 0) {
+                    return matrix[i][j];
+                }
             }
         }
+
         return null;
     }
 //
@@ -70,16 +75,16 @@ public class BacktrackSolver extends AbstractSolver {
             commands.push(compound);
         }
 
-        final KCell cell = getEmptyCell();
+        final KSCell cell = getEmptyCell();
         if (cell == null) {
             // no more empty cells
-            return puzzle.isValid();
+            return true;
         } else {
             // cell is empty; set it in all possible ways
             for (int state = puzzle.getMinNumber(); state <= puzzle.getMaxNumber(); ++state) {
                 final Command command = new SetCommand(cell, state);
                 command.execute();
-                if (puzzle.isValid()) {
+                if (puzzle.isValid(cell)) {
                     commands.push(command);
                     // number of open cells is one less
                     if (solve()) {

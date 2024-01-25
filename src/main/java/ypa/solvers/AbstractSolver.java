@@ -4,17 +4,17 @@ import java.util.Collection;
 import java.util.Stack;
 
 import ypa.command.Command;
-import ypa.model.KPuzzle;
+import ypa.model.KSPuzzle;
 
 /**
- * Abstract base class for solvers of Kakuro puzzles.
+ * Abstract base class for solvers of Killer Sudoku puzzles.
  *
  * @author Tom Verhoeff (Eindhoven University of Technology)
  */
 public abstract class AbstractSolver {
 
     /** The puzzle being solved. */
-    protected KPuzzle puzzle;
+    protected KSPuzzle puzzle;
 
     /** Commands executed. */
     protected Stack<Command> commands;
@@ -26,7 +26,7 @@ public abstract class AbstractSolver {
      * @throws IllegalArgumentException  if {@code puzzle == null}
      * @pre {@code puzzle != null}
      */
-    public AbstractSolver(final KPuzzle puzzle) {
+    public AbstractSolver(final KSPuzzle puzzle) {
         if (puzzle == null) {
             throw new IllegalArgumentException(this.getClass().getSimpleName()
                     + "().pre failed: puzzle == null");

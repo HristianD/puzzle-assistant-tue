@@ -1,5 +1,5 @@
 /**
- * Package holding all classes for automatic reasoning.
+ * Page holding all classes for automatic reasoning.
  *
  * See the contract of {@link ypa.reasoning.Reasoner#apply()} for details
  * on how a reasoner works.
